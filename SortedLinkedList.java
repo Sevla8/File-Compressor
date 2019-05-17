@@ -1,4 +1,7 @@
-import java.util.*;
+import java.lang.Comparable;
+import java.util.Comparator;
+import java.util.ListIterator;
+import java.util.LinkedList;
 
 public class SortedLinkedList<E> extends LinkedList<E> {
 	private Comparator<E> cmp;

@@ -3,51 +3,50 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 
 
 public class Huffman {
 
-	public static SortedLinkedList<Node> occCount(File file) {
-		SortedLinkedList<Node> sortedLinkedList = new SortedLinkedList<Node>();
+	public static SortedLinkedList<Node> occurenceCount(File file) {
+		SortedLinkedList<Node> list = new SortedLinkedList<Node>();
 		HashMap<Byte, Integer> hashMap = new HashMap<Byte, Integer>();
 
-		FileInputStream fileInputStream = null;
+		FileInputStream fileR = null;
 		try {
-			fileInputStream = new FileInputStream(file);
-		}
-		catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		long length = file.length();
-		long it = 0;
-		int character;
-		while (length > it) {
-			it += 1;
-			try {
-				character = fileInputStream.read();
+			fileR = new FileInputStream(file);
+			long length = file.length();
+			long it = 0;
+			int character;
+			while (length > it) {
+				it += 1;
+				character = fileR.read();
 				byte currentByte = (byte) character;
 				if (hashMap.get(currentByte) != null)
 					hashMap.put(currentByte, hashMap.get(currentByte)+1);
 				else 
 					hashMap.put(currentByte, 1);
 			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
+			fileR.close();
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
 		}
 
 		for (Map.Entry<Byte, Integer> entry : hashMap.entrySet()) {
-			sortedLinkedList.sortedAdd(new Node (entry.getKey(), entry.getValue(), null, null));
+			list.sortedAdd(new Node (entry.getKey(), entry.getValue(), null, null));
 		}
 
-		return sortedLinkedList;
+		return list;
 	}
 
 	public static Node createNode(File file) {
-		SortedLinkedList<Node> list = Huffman.occCount(file);
+		SortedLinkedList<Node> list = Huffman.occurenceCount(file);
 
 		while (list.size() >= 2) {
 			Node rightNode = list.remove();
@@ -58,49 +57,41 @@ public class Huffman {
 		return list.getFirst();	
 	}
 
-	public static void getCodageRec(Node tree, HashMap<Byte, boolean[]> hashMap, boolean[] tab, boolean bool) {
-		tmp = new boolean[tab.length];
+	public static void getCodingRec(Node tree, HashMap<Byte, boolean[]> hashMap, boolean[] tab, boolean bool) {
+		boolean[] tmp = new boolean[tab.length+1];
 		for (int i = 0; i < tab.length; i += 1)
 			tmp[i] = tab[i];
-		tab[tab.length] = bool;
-		if (tree.leftNode == null && tree.rightNode == null) {
+		tmp[tab.length] = bool;
+		if (tree.leftNode == null && tree.rightNode == null)
 			hashMap.put(tree.character, tmp);
-		}
-		if (tree.leftNode != null) {
-			Huffman.getCodageRec(tree.leftNode, hashMap, tmp, false);
-		}
-		if (tree.rightNode != null) {
-			Huffman.getCodageRec(tree.rightNode, hashMap, tmp, true);
+		else {
+			Huffman.getCodingRec(tree.rightNode, hashMap, tmp, true);
+			Huffman.getCodingRec(tree.leftNode, hashMap, tmp, false);
 		}
 	}
 	
-	public static HashMap<Byte, boolean[]> getCodage(Node tree) {
+	public static HashMap<Byte, boolean[]> getCoding(Node tree) {
 		HashMap<Byte, boolean[]> hashMap = new HashMap<Byte, boolean[]>();
-		boolean[] tabTrue = new boolean[1];
-		tabTrue[0] = true;
-		boolean[] tabFalse = new boolean[1];
-		tabFalse[0] = false;
-
-		Huffman.getCodageRec(tree, hashMap, tabTrue, true);
-		Huffman.getCodageRec(tree, hashMap, tabFalse, true);
+		Huffman.getCodingRec(tree.rightNode, hashMap, new boolean[0], true);
+		Huffman.getCodingRec(tree.leftNode, hashMap, new boolean[0], false);
 		return hashMap;
 	}
 
 	public static void write(File file, HashMap<Byte, boolean[]> hashMap) {
-		FileOutputStream fileOutputStream = null;
 		try {
-			fileOutputStream = new FileOutputStream(file);
-			fileOutputStream.write(hashMap.size());
+			FileOutputStream fileW = new FileOutputStream(file);
+			fileW.write(hashMap.size());
 			for (Map.Entry<Byte, boolean[]> entry : hashMap.entrySet()) {
-				fileOutputStream.write(entry.getKey());
+				fileW.write(entry.getKey());
 				for (boolean bool : entry.getValue()) {
 				 	if (bool)
-				 		fileOutputStream.write('1');
+				 		fileW.write('1');
 				 	else 
-				 		fileOutputStream.write('0');
+				 		fileW.write('0');
 				}
+				fileW.write(' ');
 			}
-			fileOutputStream.write(' ');
+			fileW.close();
 		}
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -110,14 +101,95 @@ public class Huffman {
 		}
 	}
 
-	// public HashMap<Byte, boolean[]> read(File file) {
-	// 	FileInputStream fileInputStream = null;
-	// 	try {
-	// 		fileInputStream = new FileInputStream(file);
+	public static HashMap<Byte, boolean[]> read(File file) {
+		HashMap<Byte, boolean[]> hashMap = new HashMap<Byte, boolean[]>();
+		try {
+			FileInputStream fileR = new FileInputStream(file);
+			int length = fileR.read();
+			byte currentByte = (byte)fileR.read();
+			while (currentByte != -1) {
+				byte character = currentByte;
+				ArrayList<Byte> binary = new ArrayList<Byte>();
+				currentByte = (byte)fileR.read();
+				while (currentByte != ' ' && currentByte != -1) {
+					binary.add(currentByte);
+					currentByte = (byte)fileR.read();
+				}
+				boolean[] bool = new boolean[binary.size()];
+				for (int i = 0; i < binary.size(); i += 1)
+					bool[i] = binary.get(i) == '1' ? true : false;
+				hashMap.put(character, bool);
+				currentByte = (byte)fileR.read();
+			}
+			fileR.close();
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		return hashMap;
+	}
 
-	// 	}
-	// 	catch (FileNotFoundException e) {
-	// 		e.printStackTrace();
-	// 	}
-	// }
+	public static void encode(String fileName, String fileNameOut) {
+		File file = new File(fileName);
+		File fileOut = new File(fileNameOut);
+		Node node = Huffman.createNode(file);
+		HashMap<Byte, boolean[]> hashMap = Huffman.getCoding(node);
+
+		try {
+			FileInputStream fileR = new FileInputStream(file);
+
+			ArrayList<boolean[]> list = new ArrayList<boolean[]>();
+			byte currentByte = (byte)fileR.read();
+			while (currentByte != -1) {
+				list.add(hashMap.get(currentByte));
+				currentByte = (byte)fileR.read();
+			}
+			fileR.close();
+
+			int length = 0;
+			for (boolean[] bool : list) {
+				length += bool.length;
+			}
+			if (length%8 != 0)
+				length += 8-length%8;
+
+			boolean[] group = new boolean[length];
+			int i = 0;
+			for (int j = 0; j < list.size(); j += 1) {
+				for (int k = 0; k < list.get(j).length; k += 1) {
+					group[i] = list.get(j)[k];
+					i += 1;
+				}
+			}
+			while (i < length) {
+				group[i] = false;
+				i += 1;
+			}
+
+			FileOutputStream fileW = new FileOutputStream(fileOut);
+
+			for (int j = 0; j < group.length/8; j += 1) {
+				byte b = 0;
+				for (int k = 0; k < 8; k += 1) {
+					if (group[j*8+k])
+						b = (byte)(b + (byte)(1 << k));
+				}
+				fileW.write(b);
+			}
+			fileW.close();
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void decode(String fileName, String fileNameOut) {
+
+	}
 }
