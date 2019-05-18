@@ -33,6 +33,11 @@ public class Main {
 		// 	System.out.println("");
 		// }
 
-		Huffman.encode("file.txt", "test.txt");
+		Huffman.encode("file.txt", "encode.txt");
+
+		// HashMap<Byte, boolean[]> hashMap = Huffman.getCoding(Huffman.createNode(file));
+		// Huffman.getTree(hashMap).display();
+
+		Huffman.decode("encode.txt", "decode.txt");
 	}
 }

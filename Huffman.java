@@ -6,7 +6,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-
+import java.util.Collections;
+import java.util.Comparator;
 
 public class Huffman {
 
@@ -57,7 +58,7 @@ public class Huffman {
 		return list.getFirst();	
 	}
 
-	public static void getCodingRec(Node tree, HashMap<Byte, boolean[]> hashMap, boolean[] tab, boolean bool) {
+	private static void getCodingRec(Node tree, HashMap<Byte, boolean[]> hashMap, boolean[] tab, boolean bool) {
 		boolean[] tmp = new boolean[tab.length+1];
 		for (int i = 0; i < tab.length; i += 1)
 			tmp[i] = tab[i];
@@ -107,11 +108,11 @@ public class Huffman {
 			FileInputStream fileR = new FileInputStream(file);
 			int length = fileR.read();
 			byte currentByte = (byte)fileR.read();
-			while (currentByte != -1) {
+			while (length != 0) {
 				byte character = currentByte;
 				ArrayList<Byte> binary = new ArrayList<Byte>();
 				currentByte = (byte)fileR.read();
-				while (currentByte != ' ' && currentByte != -1) {
+				while (currentByte != ' ') {
 					binary.add(currentByte);
 					currentByte = (byte)fileR.read();
 				}
@@ -120,6 +121,7 @@ public class Huffman {
 					bool[i] = binary.get(i) == '1' ? true : false;
 				hashMap.put(character, bool);
 				currentByte = (byte)fileR.read();
+				length -= 1;
 			}
 			fileR.close();
 		}
@@ -137,7 +139,7 @@ public class Huffman {
 		File fileOut = new File(fileNameOut);
 		Node node = Huffman.createNode(file);
 		HashMap<Byte, boolean[]> hashMap = Huffman.getCoding(node);
-
+		Huffman.write(fileOut, hashMap);
 		try {
 			FileInputStream fileR = new FileInputStream(file);
 
@@ -169,7 +171,7 @@ public class Huffman {
 				i += 1;
 			}
 
-			FileOutputStream fileW = new FileOutputStream(fileOut);
+			FileOutputStream fileW = new FileOutputStream(fileOut, true); // to write after EOF
 
 			for (int j = 0; j < group.length/8; j += 1) {
 				byte b = 0;
@@ -189,7 +191,95 @@ public class Huffman {
 		}
 	}
 
-	public static void decode(String fileName, String fileNameOut) {
+	private static void getTreeRec(byte character, boolean[] bool, Node node) {
+		for (int i = 0; i < bool.length-1; i += 1) {
+			if (bool[i]) {
+				if (node.rightNode == null)
+					node.rightNode = new Node((byte)0, 0, null, null);
+				node = node.rightNode;
+			}
+			else {
+				if (node.leftNode == null)
+					node.leftNode = new Node((byte)0, 0, null, null);
+				node = node.leftNode;
+			}
+		}
+		if (bool[bool.length-1])
+			node.rightNode = new Node(character, 0, null, null);
+		else 
+			node.leftNode = new Node(character, 0, null, null);
+	}
 
+	public static Node getTree(HashMap<Byte, boolean[]> hashMap) {
+		Node node = new Node((byte)0, 0, null, null);
+		for (Map.Entry<Byte, boolean[]> entry : hashMap.entrySet()) {
+			Huffman.getTreeRec(entry.getKey(), entry.getValue(), node);
+		}
+		return node;
+	}
+
+	public static void decode(String fileName, String fileNameOut) {
+		File file = new File(fileName);
+		File fileOut = new File(fileNameOut);
+		HashMap<Byte, boolean[]> hashMap = read(file);
+		Node tree = getTree(hashMap);
+		ArrayList<Boolean> list = new ArrayList<Boolean>();
+
+		try {
+			FileInputStream fileR = new FileInputStream(file);
+			int length = fileR.read();
+			//System.out.println(length);
+			byte currentByte = (byte)fileR.read();
+			while (length != 0) {
+				currentByte = (byte)fileR.read();
+				while (currentByte != ' ') {
+					currentByte = (byte)fileR.read();
+				}
+				currentByte = (byte)fileR.read();
+				length -= 1;
+				//System.out.println((char)character);
+			}
+			//currentByte = (byte)fileR.read();
+			//System.out.println(currentByte);
+			while (currentByte != -1) {
+				for (int i = 0; i < 8; i += 1) {
+					if ((byte)((currentByte >> i) & 0x1) == 0)
+						list.add(false);
+					else 
+						list.add(true);
+				}
+				currentByte = (byte)fileR.read();
+				//System.out.println(currentByte);
+			}
+			fileR.close();
+			///
+			// for (boolean bool : list) {
+			// 	System.out.print(bool+" ");
+			// }
+			//
+			System.out.println(list.size());
+			Node node = tree;
+			FileOutputStream fileW = new FileOutputStream(fileOut);
+			for (int i = 0; i < list.size(); i += 1) {
+				if (node.rightNode != null && node.leftNode != null) {
+					if (list.get(i))
+						node = node.rightNode;
+					else 
+						node = node.leftNode;
+				}
+				else {
+					fileW.write(node.character);
+					node = list.get(i) ? tree.rightNode : tree.leftNode;
+				}
+				//node.display();
+			}
+			fileW.close();
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
