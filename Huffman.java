@@ -144,19 +144,20 @@ public class Huffman {
 			FileInputStream fileR = new FileInputStream(file);
 
 			ArrayList<boolean[]> list = new ArrayList<boolean[]>();
-			byte currentByte = (byte)fileR.read();
-			while (currentByte != -1) {
-				list.add(hashMap.get(currentByte));
-				currentByte = (byte)fileR.read();
+			byte[] buffer = new byte[10];
+			int n = fileR.read(buffer);
+			while (n != -1) {
+				for (int k = 0; k < n; k += 1){
+					list.add(hashMap.get(buffer[k]));
+				}
+				buffer = new byte[10];
+				n = fileR.read(buffer);
 			}
 			fileR.close();
 
 			int length = 0;
-			for (boolean[] bool : list) {
+			for (boolean[] bool : list)
 				length += bool.length;
-			}
-			if (length%8 != 0)
-				length += 8-length%8;
 
 			boolean[] group = new boolean[length];
 			int i = 0;
@@ -228,7 +229,6 @@ public class Huffman {
 		try {
 			FileInputStream fileR = new FileInputStream(file);
 			int length = fileR.read();
-			//System.out.println(length);
 			byte currentByte = (byte)fileR.read();
 			while (length != 0) {
 				currentByte = (byte)fileR.read();
@@ -237,27 +237,30 @@ public class Huffman {
 				}
 				currentByte = (byte)fileR.read();
 				length -= 1;
-				//System.out.println((char)character);
 			}
-			//currentByte = (byte)fileR.read();
-			//System.out.println(currentByte);
-			while (currentByte != -1) {
-				for (int i = 0; i < 8; i += 1) {
-					if ((byte)((currentByte >> i) & 0x1) == 0)
-						list.add(false);
-					else 
-						list.add(true);
+
+			for (int i = 0; i < 8; i += 1) {
+				if ((byte)((currentByte >> i) & 0x1) == 0)
+					list.add(false);
+				else 
+					list.add(true);
+			}
+			byte[] buffer = new byte[10];
+			int n = fileR.read(buffer); 		// obligé de lire dans un buffer car si on lit 
+			while (n != -1) {					// le byte 11111111 (-1) la boucle s'arrete
+				for (int k = 0; k < n; k += 1) {
+					for (int i = 0; i < 8; i += 1) {
+						if ((byte)((buffer[k] >> i) & 0x1) == 0)
+							list.add(false);
+						else 
+							list.add(true);
+					}
 				}
-				currentByte = (byte)fileR.read();
-				//System.out.println(currentByte);
+				buffer = new byte[10];
+				n = fileR.read(buffer);
 			}
 			fileR.close();
-			///
-			// for (boolean bool : list) {
-			// 	System.out.print(bool+" ");
-			// }
-			//
-			System.out.println(list.size());
+
 			Node node = tree;
 			FileOutputStream fileW = new FileOutputStream(fileOut);
 			for (int i = 0; i < list.size(); i += 1) {
@@ -271,7 +274,6 @@ public class Huffman {
 					fileW.write(node.character);
 					node = list.get(i) ? tree.rightNode : tree.leftNode;
 				}
-				//node.display();
 			}
 			fileW.close();
 		}
