@@ -57,6 +57,13 @@ public class Huffman {
 		}
 		return list.getFirst();	
 	}
+	
+	public static HashMap<Byte, boolean[]> getCoding(Node tree) {
+		HashMap<Byte, boolean[]> hashMap = new HashMap<Byte, boolean[]>();
+		Huffman.getCodingRec(tree.rightNode, hashMap, new boolean[0], true);
+		Huffman.getCodingRec(tree.leftNode, hashMap, new boolean[0], false);
+		return hashMap;
+	}
 
 	private static void getCodingRec(Node tree, HashMap<Byte, boolean[]> hashMap, boolean[] tab, boolean bool) {
 		boolean[] tmp = new boolean[tab.length+1];
@@ -69,13 +76,6 @@ public class Huffman {
 			Huffman.getCodingRec(tree.rightNode, hashMap, tmp, true);
 			Huffman.getCodingRec(tree.leftNode, hashMap, tmp, false);
 		}
-	}
-	
-	public static HashMap<Byte, boolean[]> getCoding(Node tree) {
-		HashMap<Byte, boolean[]> hashMap = new HashMap<Byte, boolean[]>();
-		Huffman.getCodingRec(tree.rightNode, hashMap, new boolean[0], true);
-		Huffman.getCodingRec(tree.leftNode, hashMap, new boolean[0], false);
-		return hashMap;
 	}
 
 	public static void write(File file, HashMap<Byte, boolean[]> hashMap) {
@@ -158,6 +158,9 @@ public class Huffman {
 			int length = 0;
 			for (boolean[] bool : list)
 				length += bool.length;
+			if (length%8 != 0) {
+				length += 8 - length%8;
+			}
 
 			boolean[] group = new boolean[length];
 			int i = 0;
