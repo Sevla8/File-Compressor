@@ -13,7 +13,7 @@ import java.io.DataInputStream;
 
 public class Huffman {
 
-	private static SortedLinkedList<Node> occurenceCount(File file) {
+	public static SortedLinkedList<Node> occurenceCount(File file) {
 		SortedLinkedList<Node> list = new SortedLinkedList<Node>();
 		HashMap<Byte, Integer> hashMap = new HashMap<Byte, Integer>();
 
@@ -48,7 +48,7 @@ public class Huffman {
 		return list;
 	}
 
-	private static Node createNode(File file) {
+	public static Node createNode(File file) {
 		SortedLinkedList<Node> list = Huffman.occurenceCount(file);
 
 		while (list.size() >= 2) {
@@ -60,14 +60,14 @@ public class Huffman {
 		return list.getFirst();	
 	}
 	
-	private static HashMap<Byte, boolean[]> getCoding(Node tree) {
+	public static HashMap<Byte, boolean[]> getCoding(Node tree) {
 		HashMap<Byte, boolean[]> hashMap = new HashMap<Byte, boolean[]>();
 		Huffman.getCodingRec(tree.rightNode, hashMap, new boolean[0], true);
 		Huffman.getCodingRec(tree.leftNode, hashMap, new boolean[0], false);
 		return hashMap;
 	}
 
-	private static void getCodingRec(Node tree, HashMap<Byte, boolean[]> hashMap, boolean[] tab, boolean bool) {
+	public static void getCodingRec(Node tree, HashMap<Byte, boolean[]> hashMap, boolean[] tab, boolean bool) {
 		boolean[] tmp = new boolean[tab.length+1];
 		for (int i = 0; i < tab.length; i += 1)
 			tmp[i] = tab[i];
@@ -80,10 +80,11 @@ public class Huffman {
 		}
 	}
 
-	private static void write(File file, HashMap<Byte, boolean[]> hashMap) {
+	public static void write(File file, HashMap<Byte, boolean[]> hashMap) {
 		try {
 			FileOutputStream fileW = new FileOutputStream(file);
-			fileW.write(hashMap.size());
+			DataOutputStream dataW = new DataOutputStream(fileW);
+			dataW.writeInt(hashMap.size());
 			for (Map.Entry<Byte, boolean[]> entry : hashMap.entrySet()) {
 				fileW.write(entry.getKey());
 				for (boolean bool : entry.getValue()) {
@@ -104,11 +105,12 @@ public class Huffman {
 		}
 	}
 
-	private static HashMap<Byte, boolean[]> read(File file) {
+	public static HashMap<Byte, boolean[]> read(File file) {
 		HashMap<Byte, boolean[]> hashMap = new HashMap<Byte, boolean[]>();
 		try {
 			FileInputStream fileR = new FileInputStream(file);
-			int length = fileR.read();
+			DataInputStream dataR = new DataInputStream(fileR);
+			int length = dataR.readInt();
 			byte currentByte = (byte)fileR.read();
 			while (length != 0) {
 				byte character = currentByte;
@@ -201,7 +203,7 @@ public class Huffman {
 		}
 	}
 
-	private static void getTreeRec(byte character, boolean[] bool, Node node) {
+	public static void getTreeRec(byte character, boolean[] bool, Node node) {
 		for (int i = 0; i < bool.length-1; i += 1) {
 			if (bool[i]) {
 				if (node.rightNode == null)
@@ -220,7 +222,7 @@ public class Huffman {
 			node.leftNode = new Node(character, 0, null, null);
 	}
 
-	private static Node getTree(HashMap<Byte, boolean[]> hashMap) {
+	public static Node getTree(HashMap<Byte, boolean[]> hashMap) {
 		Node node = new Node((byte)0, 0, null, null);
 		for (Map.Entry<Byte, boolean[]> entry : hashMap.entrySet()) {
 			Huffman.getTreeRec(entry.getKey(), entry.getValue(), node);
@@ -238,7 +240,8 @@ public class Huffman {
 
 		try {
 			FileInputStream fileR = new FileInputStream(file);
-			int length = fileR.read();
+			DataInputStream dataR0 = new DataInputStream(fileR);
+			int length = dataR0.readInt();
 			byte currentByte = (byte)fileR.read();
 			while (length != 0) {
 				currentByte = (byte)fileR.read();
@@ -264,7 +267,7 @@ public class Huffman {
 					list.add(true);
 			}
 			byte[] buffer = new byte[10];
-			int n = fileR.read(buffer); 		// obligé de lire dans un buffer car si on lit 
+			int n = fileR.read(buffer); 		// oblige de lire dans un buffer car si on lit 
 			while (n != -1) {					// le byte 11111111 (-1) la boucle s'arrete
 				for (int k = 0; k < n; k += 1) {
 					for (int i = 0; i < 8; i += 1) {
