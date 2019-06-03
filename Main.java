@@ -4,8 +4,8 @@ import java.util.HashMap;
 
 public class Main {
 	public static void main(String[] args) {
-		File file = new File("file.txt");
-		File test = new File("test.txt");
+		// File file = new File("file.txt");
+		// File test = new File("test.txt");
 		
 		// SortedLinkedList<Node> list = Huffman.occurenceCount(file);
 		// for (Node node : list) {
